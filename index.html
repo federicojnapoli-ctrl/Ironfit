@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="IronFit">
+<meta name="theme-color" content="#16a34a">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<title>IronFit — Nutrición Deportiva</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { background: #f0fdf4; font-family: 'DM Sans',-apple-system,'Segoe UI',sans-serif; min-height:100vh; display:flex; justify-content:center; overscroll-behavior:none; }
+  #app { width:100%; max-width:420px; background:#fff; min-height:100vh; display:flex; flex-direction:column; box-shadow:0 0 40px #16a34a18; }
+  .header { padding:16px 20px 14px; flex-shrink:0; border-bottom:1px solid #e2e8f0; background:#fff; }
+  .header-inner { display:flex; justify-content:space-between; align-items:center; }
+  .logo-wrap { display:flex; align-items:center; gap:10px; }
+  .logo-icon { width:44px; height:44px; flex-shrink:0; }
+  .logo-text { display:flex; flex-direction:column; }
+  .logo { font-size:26px; font-weight:900; color:#16a34a; letter-spacing:-0.03em; line-height:1; }
+  .logo span { color:#0f172a; }
+  .logo-sub { font-size:10px; color:#94a3b8; letter-spacing:0.15em; text-transform:uppercase; margin-top:2px; }
+  .header-right { text-align:right; }
+  .header-right .lbl { font-size:10px; color:#94a3b8; }
+  .header-right .cyc { font-size:12px; color:#16a34a; font-weight:700; }
+  .profile-banner { background:linear-gradient(135deg,#f0fdf4,#dcfce7); border-radius:16px; padding:14px 16px; margin-bottom:18px; border:1px solid #bbf7d0; display:flex; align-items:center; gap:14px; }
+  .profile-avatar { width:48px; height:48px; border-radius:50%; background:linear-gradient(135deg,#22c55e,#16a34a); display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+  .profile-name { font-size:14px; font-weight:800; color:#0f172a; }
+  .profile-desc { font-size:11px; color:#64748b; margin-top:2px; }
+  .profile-tags { display:flex; gap:5px; margin-top:7px; flex-wrap:wrap; }
+  .profile-tag { padding:2px 8px; background:#fff; border:1px solid #bbf7d0; border-radius:99px; font-size:9px; color:#16a34a; font-weight:700; }
+  #content { flex:1; overflow-y:auto; padding:16px 16px 100px; -webkit-overflow-scrolling:touch; }
+  .tab-section { display:none; }
+  .tab-section.active { display:block; }
+  .day-selector { display:flex; gap:6px; margin-bottom:16px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none; }
+  .day-selector::-webkit-scrollbar { display:none; }
+  .day-btn { flex:0 0 auto; padding:7px 13px; border-radius:99px; background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; font-weight:700; font-size:12px; cursor:pointer; font-family:inherit; transition:all 0.2s; }
+  .day-btn.active { background:#16a34a; color:#fff; border-color:#16a34a; }
+  .day-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+  .day-title { font-size:22px; font-weight:900; color:#0f172a; }
+  .day-sub { font-size:12px; color:#94a3b8; }
+  .iron-total { text-align:center; background:#f0fdf4; border-radius:12px; padding:9px 14px; border:1px solid #bbf7d0; flex-shrink:0; }
+  .iron-total .num { font-size:20px; font-weight:900; color:#16a34a; }
+  .iron-total .lbl2 { font-size:10px; color:#64748b; }
+  .meals-list { display:flex; flex-direction:column; gap:8px; }
+  .meal-card { padding:11px 14px; background:#f8fafc; border-radius:12px; border:1px solid #e2e8f0; }
+  .meal-card.rest { opacity:0.45; border-style:dashed; }
+  .meal-label { font-size:10px; font-weight:700; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.05em; }
+  .meal-name { font-size:13px; color:#1e293b; font-weight:600; line-height:1.4; margin-bottom:3px; }
+  .meal-note { font-size:10px; color:#94a3b8; font-style:italic; margin-bottom:3px; }
+  .iron-bar-row { display:flex; align-items:center; gap:6px; margin-top:4px; }
+  .iron-bar-val { font-size:10px; color:#94a3b8; width:28px; }
+  .iron-bar-track { flex:1; height:4px; background:#e2e8f0; border-radius:99px; }
+  .iron-bar-fill { height:100%; border-radius:99px; transition:width 0.5s; }
+  .vitc-badge { font-size:10px; color:#ea580c; margin-top:3px; }
+  /* Match day */
+  .match-card { background:linear-gradient(135deg,#fff7ed,#fef3c7); border:1px solid #fcd34d; border-radius:14px; padding:14px 16px; margin-bottom:12px; }
+  .match-title { font-size:12px; font-weight:800; color:#92400e; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:10px; }
+  .match-opt { background:#fff; border-radius:10px; padding:10px 12px; margin-bottom:7px; border:1px solid #fde68a; }
+  .match-opt:last-child { margin-bottom:0; }
+  .match-opt-slot { font-size:10px; font-weight:700; color:#d97706; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:3px; }
+  .match-opt-name { font-size:13px; color:#1e293b; font-weight:600; margin-bottom:2px; }
+  .match-opt-note { font-size:10px; color:#78716c; font-style:italic; }
+  .match-timing { display:inline-block; background:#fef9c3; border:1px solid #fde047; border-radius:99px; font-size:9px; font-weight:700; color:#854d0e; padding:2px 8px; margin-top:5px; }
+  /* Shopping */
+  .section-header { margin-bottom:18px; }
+  .section-title { font-size:22px; font-weight:900; color:#0f172a; }
+  .section-sub { font-size:12px; color:#94a3b8; margin-top:2px; }
+  .shop-cat { margin-bottom:20px; }
+  .shop-cat-title { font-size:12px; font-weight:700; color:#16a34a; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.08em; }
+  .shop-items { display:flex; flex-direction:column; gap:6px; }
+  .shop-item { display:flex; align-items:center; gap:12px; padding:10px 14px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0; cursor:pointer; transition:opacity 0.2s; }
+  .shop-item.done { opacity:0.4; }
+  .checkbox { width:18px; height:18px; border-radius:5px; flex-shrink:0; border:2px solid #cbd5e1; display:flex; align-items:center; justify-content:center; }
+  .checkbox.checked { background:#16a34a; border-color:#16a34a; }
+  .checkbox.checked::after { content:'✓'; color:#fff; font-size:11px; font-weight:900; }
+  .shop-name { font-size:13px; color:#1e293b; flex:1; }
+  .shop-name.done { text-decoration:line-through; color:#94a3b8; }
+  .shop-days { font-size:10px; color:#94a3b8; }
+  .shop-qty { font-size:12px; color:#64748b; font-weight:600; flex-shrink:0; }
+  /* Extras */
+  .extras-section { margin-bottom:22px; }
+  .extras-cat-title { font-size:12px; font-weight:700; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.06em; }
+  .extra-card { padding:12px 14px; background:#f8fafc; border-radius:10px; margin-bottom:7px; }
+  .extra-card:last-child { margin-bottom:0; }
+  .extra-name { font-size:13px; color:#1e293b; font-weight:600; margin-bottom:3px; }
+  .extra-tip { font-size:10px; color:#64748b; }
+  /* Nav */
+  .bottom-nav { position:sticky; bottom:0; background:#fff; border-top:1px solid #e2e8f0; display:flex; padding:10px 16px 24px; gap:8px; flex-shrink:0; }
+  .nav-btn { flex:1; padding:10px 8px; border-radius:12px; background:#f1f5f9; color:#64748b; border:none; cursor:pointer; font-weight:700; font-size:12px; font-family:inherit; transition:all 0.2s; }
+  .nav-btn.active { background:#16a34a; color:#fff; }
+  @media(max-width:420px){#app{max-width:100%;}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div class="header-inner">
+      <div class="logo-wrap">
+        <!-- SVG: soccer ball merged with fork/leaf food icon -->
+        <svg class="logo-icon" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Ball circle -->
+          <circle cx="22" cy="22" r="19" fill="white" stroke="#16a34a" stroke-width="2"/>
+          <!-- Green gradient fill -->
+          <circle cx="22" cy="22" r="19" fill="url(#ballGrad)" opacity="0.13"/>
+          <!-- Soccer pentagon patches -->
+          <polygon points="22,8 27,13 25,19 19,19 17,13" fill="#0f172a" opacity="0.85"/>
+          <polygon points="34,17 36,23 31,27 26,24 27,18" fill="#0f172a" opacity="0.85"/>
+          <polygon points="30,33 24,36 20,32 22,26 28,25" fill="#0f172a" opacity="0.85"/>
+          <polygon points="14,33 10,28 13,23 19,24 20,31" fill="#0f172a" opacity="0.85"/>
+          <polygon points="10,17 16,13 21,17 19,23 13,23" fill="#0f172a" opacity="0.85"/>
+          <!-- Pentagon stitch lines -->
+          <line x1="22" y1="8" x2="27" y2="13" stroke="white" stroke-width="0.6" opacity="0.4"/>
+          <line x1="27" y1="13" x2="34" y2="17" stroke="white" stroke-width="0.6" opacity="0.4"/>
+          <line x1="17" y1="13" x2="10" y2="17" stroke="white" stroke-width="0.6" opacity="0.4"/>
+          <!-- Fork (left side of ball, white) -->
+          <g transform="translate(13,14) rotate(-18)">
+            <rect x="1.5" y="0" width="1" height="7" rx="0.5" fill="white" opacity="0.95"/>
+            <rect x="3.5" y="0" width="1" height="7" rx="0.5" fill="white" opacity="0.95"/>
+            <rect x="5.5" y="0" width="1" height="7" rx="0.5" fill="white" opacity="0.95"/>
+            <path d="M1.5 6.5 Q3.5 8.5 6.5 6.5 L6.5 13 Q3.5 14 1.5 13 Z" fill="white" opacity="0.95"/>
+          </g>
+          <!-- Leaf / veggie accent (right side) -->
+          <g transform="translate(27,20) rotate(30)">
+            <path d="M0 0 C3 -4 7 -3 6 2 C5 5 1 5 0 0Z" fill="#22c55e" opacity="0.95"/>
+            <line x1="0" y1="0" x2="3" y2="1.5" stroke="white" stroke-width="0.6" opacity="0.8"/>
+          </g>
+          <defs>
+            <radialGradient id="ballGrad" cx="40%" cy="35%" r="60%">
+              <stop offset="0%" stop-color="#22c55e"/>
+              <stop offset="100%" stop-color="#0f172a"/>
+            </radialGradient>
+          </defs>
+        </svg>
+        <div class="logo-text">
+          <div class="logo">IRON<span>FIT</span></div>
+          <div class="logo-sub">Nutrición Deportiva</div>
+        </div>
+      </div>
+      <div class="header-right"><div class="lbl">Semana actual</div><div class="cyc">Ciclo 1 · Hierro</div></div>
+    </div>
+  </div>
+  <div id="content">
+    <div class="profile-banner">
+      <div class="profile-avatar">
+        <svg width="30" height="30" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="22" cy="22" r="19" fill="white" opacity="0.2"/>
+          <polygon points="22,8 27,13 25,19 19,19 17,13" fill="white" opacity="0.9"/>
+          <polygon points="34,17 36,23 31,27 26,24 27,18" fill="white" opacity="0.9"/>
+          <polygon points="30,33 24,36 20,32 22,26 28,25" fill="white" opacity="0.9"/>
+          <polygon points="14,33 10,28 13,23 19,24 20,31" fill="white" opacity="0.9"/>
+          <polygon points="10,17 16,13 21,17 19,23 13,23" fill="white" opacity="0.9"/>
+          <g transform="translate(13,14) rotate(-18)">
+            <rect x="1.5" y="0" width="1" height="7" rx="0.5" fill="#16a34a"/>
+            <rect x="3.5" y="0" width="1" height="7" rx="0.5" fill="#16a34a"/>
+            <rect x="5.5" y="0" width="1" height="7" rx="0.5" fill="#16a34a"/>
+            <path d="M1.5 6.5 Q3.5 8.5 6.5 6.5 L6.5 13 Q3.5 14 1.5 13 Z" fill="#16a34a"/>
+          </g>
+          <g transform="translate(27,20) rotate(30)">
+            <path d="M0 0 C3 -4 7 -3 6 2 C5 5 1 5 0 0Z" fill="#bbf7d0"/>
+            <line x1="0" y1="0" x2="3" y2="1.5" stroke="white" stroke-width="0.8"/>
+          </g>
+        </svg>
+      </div>
+      <div>
+        <div class="profile-name">Plan IronFit</div>
+        <div class="profile-desc">Futbolista · Anemia estable · Sin suplementos deportivos</div>
+        <div class="profile-tags">
+          <span class="profile-tag">↑ Rendimiento</span>
+          <span class="profile-tag">Fe Máx.</span>
+          <span class="profile-tag">Vit C</span>
+          <span class="profile-tag">100% natural</span>
+        </div>
+      </div>
+    </div>
+    <div id="tab-menu" class="tab-section active">
+      <div class="day-selector" id="day-selector"></div>
+      <div class="day-header">
+        <div><div class="day-title" id="day-title">Lunes</div><div class="day-sub">Plan nutricional deportivo</div></div>
+        <div class="iron-total"><div class="num" id="iron-num">—</div><div class="lbl2">Hierro total</div></div>
+      </div>
+      <div id="match-banner"></div>
+      <div class="meals-list" id="meals-list"></div>
+    </div>
+    <div id="tab-shopping" class="tab-section">
+      <div class="section-header"><div class="section-title">Lista de Compras</div><div class="section-sub" id="shop-sub">Semana completa</div></div>
+      <div id="shopping-list"></div>
+    </div>
+    <div id="tab-extras" class="tab-section">
+      <div class="section-header"><div class="section-title">Opciones Extra</div><div class="section-sub">Snacks, licuados y guía de partido</div></div>
+      <div id="extras-list"></div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-btn active" onclick="switchTab(0)">📅 Menú</button>
+    <button class="nav-btn" onclick="switchTab(1)">🛒 Compras</button>
+    <button class="nav-btn" onclick="switchTab(2)">✨ Extras</button>
+  </div>
+</div>
+<script>
+const DAYS=["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
+const FULL=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
+
+const MATCH={
+  5:{label:"⚽ Partido — Sábado a la noche",opts:[
+    {slot:"Merienda",name:"Tostadas integrales con palta y tomate + jugo de naranja",note:"Hidratos de absorción media + vitamina C. Liviano pero sostenido.",time:"3 a 4 horas antes"},
+    {slot:"Snack pre-partido",name:"Banana + puñado de nueces",note:"Energía rápida sin pesadez. No comer nada más cerca del partido.",time:"60–90 min antes"},
+    {slot:"Post-partido",name:"Huevos revueltos con espinaca + naranja",note:"Recuperación con hierro real. Sin suplementos, funciona igual de bien.",time:"Dentro de los 45 min"},
+  ]},
+  6:{label:"⚽ Partido — Domingo a la mañana",opts:[
+    {slot:"Desayuno (opción 1)",name:"Tostadas integrales + huevo revuelto + jugo de naranja exprimido",note:"Desayuná no antes de 2:30 hs del partido. Ni muy lleno ni en ayunas.",time:"2,5 a 3 horas antes"},
+    {slot:"Desayuno (opción 2)",name:"Avena cocida + banana + nueces + vaso de naranja",note:"Si el huevo temprano no te cae bien, esta opción es más suave para el estómago.",time:"2,5 a 3 horas antes"},
+    {slot:"Snack opcional",name:"Media banana o 2–3 dátiles",note:"Solo si lo necesitás. No es obligatorio si desayunaste bien.",time:"30–45 min antes"},
+    {slot:"Post-partido",name:"Lentejas o garbanzos con limón + fruta con vit C",note:"El momento más importante para reponer hierro. No lo saltes.",time:"Dentro de los 45 min"},
+  ]},
+};
+
+const menu=[
+  {day:"Lunes",
+    preEntrenamiento:{name:"Banana + puñado de maní",iron:0.6,vitC:8,note:"45 min antes del entreno"},
+    desayuno:{name:"Tazón de avena con leche, banana y miel",iron:2.8,vitC:8,note:"Avena Quaker o similar, cualquier almacén"},
+    almuerzo:{name:"Guiso de lentejas con zanahoria y papa",iron:6.2,vitC:18,note:"Exprimir limón al servir — suma vitamina C"},
+    merienda:{name:"Jugo de naranja exprimido + galletas de arroz",iron:0.4,vitC:70,note:"2 naranjas medianas rinden bien"},
+    postEntrenamiento:{name:"2 huevos duros + naranja",iron:1.8,vitC:70,note:"Listo en 10 min, dentro de los 45 min"},
+    cena:{name:"Pollo al horno con papas y ensalada de tomate",iron:1.6,vitC:25,note:"Agregar limón a la ensalada"}},
+  {day:"Martes",
+    preEntrenamiento:{name:"Tostada con mermelada + vaso de leche",iron:0.5,vitC:2,note:"1 hora antes, fácil de digerir"},
+    desayuno:{name:"Revuelto de huevos con espinaca y tomate",iron:3.4,vitC:28,note:"3 huevos + espinaca fresca de verdulería"},
+    almuerzo:{name:"Tallarines con salsa de carne picada y morrón",iron:4.0,vitC:80,note:"Morrón rojo aporta mucha vitamina C"},
+    merienda:{name:"Licuado de banana, leche y cacao",iron:1.2,vitC:8,note:"Sin azúcar, el cacao trae hierro"},
+    postEntrenamiento:{name:"Yogur natural con banana",iron:0.6,vitC:8,note:""},
+    cena:{name:"Milanesa de hígado con puré de papas",iron:8.0,vitC:10,note:"Hígado = fuente de hierro más potente. Una vez por semana"}},
+  {day:"Miércoles",
+    preEntrenamiento:{name:"Banana + nueces",iron:0.5,vitC:8,note:"45 min antes"},
+    desayuno:{name:"Tostadas con queso untable y tomate en rodajas",iron:0.8,vitC:18,note:"Pan lactal integral si podés conseguir"},
+    almuerzo:{name:"Ensalada de garbanzos con tomate, cebolla y limón",iron:5.0,vitC:42,note:"Garbanzos de lata, enjuagados — rápido y fácil"},
+    merienda:{name:"Naranja + puñado de maní tostado",iron:0.9,vitC:70,note:"Maní sin sal de cualquier kiosco"},
+    postEntrenamiento:{name:"Tostada integral con huevo frito y tomate",iron:1.6,vitC:18,note:""},
+    cena:{name:"Milanesa de ternera con ensalada mixta + limón",iron:3.4,vitC:30,note:"Limón a la ensalada para absorber el hierro de la carne"}},
+  {day:"Jueves",
+    preEntrenamiento:{name:"Pan con manteca y miel",iron:0.4,vitC:0,note:"1 hora antes, liviano"},
+    desayuno:{name:"Mate cocido con leche + tostadas con dulce de leche",iron:0.6,vitC:0,note:"Después del desayuno esperá 1 hs antes del suplemento"},
+    almuerzo:{name:"Estofado de carne con papas, zanahoria y perejil",iron:5.2,vitC:35,note:"Perejil fresco al final — no cocerlo"},
+    merienda:{name:"Jugo de naranja + medialunas",iron:0.5,vitC:70,note:"El jugo de naranja compensa"},
+    postEntrenamiento:{name:"Banana + vaso de leche",iron:0.5,vitC:8,note:""},
+    cena:{name:"Cazuela de porotos con chorizo colorado y arroz",iron:5.6,vitC:12,note:"Plato completo, rico en hierro vegetal + hemo"}},
+  {day:"Viernes",
+    preEntrenamiento:{name:"Banana + galletitas de avena",iron:0.7,vitC:8,note:"45 min antes"},
+    desayuno:{name:"Avena cocida con banana y una naranja al costado",iron:2.6,vitC:70,note:"La naranja al lado potencia la absorción de la avena"},
+    almuerzo:{name:"Suprema de pollo a la plancha con arroz y ensalada",iron:1.8,vitC:30,note:"Ensalada con tomate y limón"},
+    merienda:{name:"Licuado de naranja, zanahoria y banana",iron:1.0,vitC:75,note:"Licuadora, nada sofisticado"},
+    postEntrenamiento:{name:"Yogur natural + galletitas de arroz",iron:0.5,vitC:4,note:""},
+    cena:{name:"Revuelto gramajo con jamón, arvejas y huevo",iron:3.8,vitC:15,note:"Arvejas son buena fuente de hierro vegetal"}},
+  {day:"Sábado",
+    preEntrenamiento:{name:"Banana + nueces (si hay entreno temprano)",iron:0.5,vitC:8,note:"Ver guía de partido ↓"},
+    desayuno:{name:"Tostadas con huevo revuelto, tomate y jugo de naranja",iron:2.0,vitC:70,note:"Ajustá el horario según el partido"},
+    almuerzo:{name:"Asado de tira o vacío + ensalada mixta con limón",iron:4.8,vitC:35,note:"El clásico del sábado — hierro hemo de calidad"},
+    merienda:{name:"Ver guía de partido ↓",iron:1.2,vitC:35,note:"Tostadas con tomate + jugo de naranja, 3–4 hs antes"},
+    postEntrenamiento:{name:"Revuelto de huevos con espinaca + naranja",iron:2.4,vitC:72,note:"Dentro de los 45 min post-partido"},
+    cena:{name:"Fideos con tuco casero (tomate, carne picada, morrón)",iron:3.2,vitC:55,note:"Liviano para recuperar después del partido"}},
+  {day:"Domingo",
+    preEntrenamiento:{name:"Ver guía de partido — desayunar 2,5–3 hs antes ↓",iron:2.0,vitC:70,note:"Tostadas + huevo + naranja"},
+    desayuno:{name:"Tostadas con huevo revuelto + jugo de naranja exprimido",iron:2.0,vitC:70,note:"2,5 a 3 horas antes del partido"},
+    almuerzo:{name:"Guiso de lentejas con chorizo y morrón rojo",iron:7.0,vitC:90,note:"El plato estrella de la semana para el hierro"},
+    merienda:{name:"Mate + galletas de agua con queso",iron:0.6,vitC:0,note:"Evitar mate en la hora previa a comidas con hierro"},
+    postEntrenamiento:{name:"—",iron:0,vitC:0,note:"Día de descanso"},
+    cena:{name:"Tortilla de papas con espinaca y queso",iron:2.8,vitC:18,note:"Cena simple, nutritiva y fácil"}},
+];
+
+const MEALS=[
+  {key:"preEntrenamiento",label:"⚡ Pre-Entreno",color:"#f59e0b"},
+  {key:"desayuno",label:"☀️ Desayuno",color:"#16a34a"},
+  {key:"almuerzo",label:"🍽️ Almuerzo",color:"#3b82f6"},
+  {key:"merienda",label:"🍎 Merienda",color:"#8b5cf6"},
+  {key:"postEntrenamiento",label:"💪 Post-Partido / Entreno",color:"#ef4444"},
+  {key:"cena",label:"🌙 Cena",color:"#0891b2"},
+];
+
+const shopping={
+  "Carnes & Proteínas":[
+    {item:"Carne picada común",qty:"500g",days:"Mar, Sáb"},
+    {item:"Pollo (pechuga o muslo)",qty:"1 kg",days:"Lun, Vie"},
+    {item:"Hígado de pollo o res",qty:"300g",days:"Mar"},
+    {item:"Chorizo colorado",qty:"200g",days:"Jue, Dom"},
+    {item:"Milanesas de ternera",qty:"600g",days:"Mié"},
+    {item:"Asado de tira o vacío",qty:"600g",days:"Sáb"},
+    {item:"Jamón cocido",qty:"150g",days:"Vie"},
+    {item:"Huevos",qty:"1 docena",days:"Lun–Dom"},
+  ],
+  "Legumbres & Cereales":[
+    {item:"Lentejas secas",qty:"500g",days:"Lun, Dom"},
+    {item:"Garbanzos (lata)",qty:"2 latas",days:"Mié"},
+    {item:"Porotos (lata o secos)",qty:"400g",days:"Jue"},
+    {item:"Avena (Quaker o similar)",qty:"500g",days:"Lun, Vie"},
+    {item:"Arroz blanco o integral",qty:"500g",days:"Vie, Jue"},
+    {item:"Fideos tallarines",qty:"500g",days:"Mar, Sáb"},
+    {item:"Pan lactal o tostadas",qty:"1 paquete",days:"Varios"},
+    {item:"Galletas de arroz o agua",qty:"1 paquete",days:"Jue, Vie"},
+  ],
+  "Verduras & Verdulería":[
+    {item:"Espinaca fresca",qty:"1 atado",days:"Mar, Sáb, Dom"},
+    {item:"Tomate",qty:"8 u.",days:"Varios"},
+    {item:"Papa",qty:"1 kg",days:"Lun, Jue"},
+    {item:"Zanahoria",qty:"4 u.",days:"Lun, Jue"},
+    {item:"Morrón rojo",qty:"3 u.",days:"Mar, Dom"},
+    {item:"Cebolla",qty:"4 u.",days:"Varios"},
+    {item:"Ajo",qty:"1 cabeza",days:"Varios"},
+    {item:"Perejil fresco",qty:"1 atado",days:"Jue"},
+    {item:"Arvejas (lata)",qty:"1 lata",days:"Vie"},
+  ],
+  "Frutas":[
+    {item:"Naranja",qty:"10 u.",days:"Todos los días"},
+    {item:"Banana",qty:"1 racimo",days:"Todos los días"},
+    {item:"Limón",qty:"4 u.",days:"Lun, Mié, Dom"},
+  ],
+  "Lácteos & Almacén":[
+    {item:"Leche entera",qty:"2L",days:"Mar, Jue"},
+    {item:"Yogur natural (La Serenísima u otra)",qty:"2 u.",days:"Mar, Vie"},
+    {item:"Queso untable",qty:"1 pote",days:"Mié, Dom"},
+    {item:"Queso en fetas o en barra",qty:"200g",days:"Dom"},
+    {item:"Maní tostado sin sal",qty:"200g",days:"Lun, Mié"},
+    {item:"Nueces",qty:"150g",days:"Lun, Sáb"},
+    {item:"Cacao en polvo (sin azúcar)",qty:"1 pote",days:"Mar"},
+    {item:"Avena (Quaker o similar)",qty:"500g",days:"Lun, Vie"},
+    {item:"Aceite de girasol o oliva",qty:"1 bot.",days:"Varios"},
+    {item:"Miel",qty:"1 frasco",days:"Lun, Jue"},
+  ],
+};
+
+const extras=[
+  {cat:"🔄 Alternativas de Almuerzo",color:"#16a34a",items:[
+    {name:"Guiso de arroz con pollo y morrón",iron:2.8,vitC:60,tip:"Clásico, barato y completo"},
+    {name:"Lentejas a la española con chorizo y papa",iron:6.0,vitC:20,tip:"Ideal para días de frío"},
+    {name:"Tarta de espinaca y huevo (masa comprada)",iron:3.2,vitC:18,tip:"Masa de tarta lista de cualquier super"},
+    {name:"Suprema a la napolitana con puré",iron:1.8,vitC:22,tip:"Agregar ensalada de tomate con limón al lado"},
+    {name:"Sopa de porotos con fideos y verduras",iron:4.5,vitC:25,tip:"Económica y con buen hierro vegetal"},
+  ]},
+  {cat:"⚡ Snacks Pre-Entreno",color:"#ea580c",items:[
+    {name:"Pan con mermelada + vaso de jugo de naranja",iron:0.5,vitC:70,tip:"Simple, rápido, suficiente"},
+    {name:"Banana + maní",iron:0.7,vitC:8,tip:"Lo conseguís en cualquier kiosco"},
+    {name:"Galletitas de avena con miel",iron:1.2,vitC:0,tip:"Se hacen en 15 min con avena, banana y miel"},
+    {name:"Yogur con banana pisada",iron:0.6,vitC:8,tip:"Fácil de llevar en un tupper"},
+  ]},
+  {cat:"🥤 Licuados Simples",color:"#7c3aed",items:[
+    {name:"Licuado de banana, leche y cacao",iron:1.8,vitC:8,tip:"Cacao amargo trae hierro. Sin azúcar si podés"},
+    {name:"Jugo de naranja con zanahoria rallada",iron:0.8,vitC:80,tip:"Licuadora o rallador, ambos funcionan"},
+    {name:"Licuado de banana, leche y avena",iron:2.0,vitC:8,tip:"Muy nutritivo antes del entreno"},
+    {name:"Naranja + limón exprimido con agua y miel",iron:0.2,vitC:95,tip:"El más simple y efectivo para vitamina C"},
+  ]},
+  {cat:"⚽ Guía Partido — Sábado Noche",color:"#f59e0b",items:[
+    {name:"Merienda: tostadas con tomate + jugo de naranja",iron:0.8,vitC:72,tip:"📍 3 a 4 horas antes del partido"},
+    {name:"Snack: banana + nueces o maní",iron:0.6,vitC:8,tip:"📍 60–90 min antes. Nada más hasta el partido"},
+    {name:"Post: revuelto de huevos con espinaca + naranja",iron:2.4,vitC:72,tip:"📍 Dentro de los 45 min. Clave para recuperar hierro"},
+  ]},
+  {cat:"⚽ Guía Partido — Domingo Mañana",color:"#0891b2",items:[
+    {name:"Desayuno op.1: tostadas + huevo revuelto + naranja",iron:2.0,vitC:70,tip:"📍 2,5 a 3 horas antes. No más tarde"},
+    {name:"Desayuno op.2: avena con leche + banana + naranja",iron:2.6,vitC:70,tip:"📍 Si el huevo temprano no te cae bien"},
+    {name:"Snack: media banana",iron:0.2,vitC:5,tip:"📍 30–45 min antes, solo si lo necesitás"},
+    {name:"Post: lentejas o garbanzos + limón + naranja",iron:5.5,vitC:80,tip:"📍 El mejor momento de la semana para reponer hierro"},
+  ]},
+  {cat:"🚫 Qué Evitar",color:"#dc2626",items:[
+    {name:"Mate o té justo después de comer carne o legumbres",iron:0,vitC:0,tip:"Esperá al menos 1,5 a 2 horas — los taninos bloquean el hierro"},
+    {name:"Café en el desayuno si vas a comer huevos o hígado",iron:0,vitC:0,tip:"Reemplazá por jugo de naranja ese día"},
+    {name:"Mucho queso o leche junto a milanesa o carne",iron:0,vitC:0,tip:"El calcio compite con el hierro — separá los lácteos"},
+    {name:"Tomar el suplemento de hierro con el mate",iron:0,vitC:0,tip:"Tomalo con jugo de naranja, no con infusiones"},
+  ]},
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let activeDay=0, activeTab=0;
+const checked={};
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+const ironColor=v=>v>=5?"#16a34a":v>=3?"#f59e0b":"#94a3b8";
+const ironBar=iron=>{
+  const pct=Math.min((iron/8)*100,100),c=ironColor(iron);
+  return `<div class="iron-bar-row"><span class="iron-bar-val">${iron}mg</span><div class="iron-bar-track"><div class="iron-bar-fill" style="width:${pct}%;background:${c}"></div></div><span style="font-size:9px;color:${c};width:14px">Fe</span></div>`;
+};
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function renderDays(){
+  document.getElementById('day-selector').innerHTML=DAYS.map((d,i)=>
+    `<button class="day-btn${i===activeDay?' active':''}" onclick="selDay(${i})">${d}</button>`).join('');
+}
+function renderMatch(){
+  const m=MATCH[activeDay];
+  document.getElementById('match-banner').innerHTML=m?`
+    <div class="match-card">
+      <div class="match-title">${m.label}</div>
+      ${m.opts.map(o=>`<div class="match-opt">
+        <div class="match-opt-slot">${o.slot}</div>
+        <div class="match-opt-name">${o.name}</div>
+        <div class="match-opt-note">${o.note}</div>
+        <span class="match-timing">🕐 ${o.time}</span>
+      </div>`).join('')}
+    </div>`:'';
+}
+function renderMeals(){
+  const d=menu[activeDay];
+  const tot=Object.values(d).reduce((s,v)=>s+(v&&v.iron?v.iron:0),0).toFixed(1);
+  document.getElementById('day-title').textContent=FULL[activeDay];
+  document.getElementById('iron-num').textContent=tot+'mg';
+  document.getElementById('meals-list').innerHTML=MEALS.map(m=>{
+    const data=d[m.key];
+    if(!data||data.name==='—') return `<div class="meal-card rest"><div class="meal-label" style="color:${m.color}">${m.label}</div><div style="font-size:12px;color:#94a3b8">Día de descanso</div></div>`;
+    return `<div class="meal-card" style="border-left:3px solid ${m.color}">
+      <div class="meal-label" style="color:${m.color}">${m.label}</div>
+      <div class="meal-name">${data.name}</div>
+      ${data.note?`<div class="meal-note">${data.note}</div>`:''}
+      ${ironBar(data.iron)}
+      ${data.vitC>0?`<div class="vitc-badge">🍊 Vit C: ${data.vitC}mg</div>`:''}
+    </div>`;
+  }).join('');
+}
+function renderShopping(){
+  const tot=Object.values(shopping).flat().length;
+  document.getElementById('shop-sub').textContent=`Semana completa · ${tot} ingredientes`;
+  document.getElementById('shopping-list').innerHTML=Object.entries(shopping).map(([cat,items])=>`
+    <div class="shop-cat">
+      <div class="shop-cat-title">${cat}</div>
+      <div class="shop-items">${items.map((it,i)=>{
+        const k=`${cat}-${i}`,done=checked[k];
+        return `<div class="shop-item${done?' done':''}" onclick="toggle('${k}')">
+          <div class="checkbox${done?' checked':''}"></div>
+          <div style="flex:1"><div class="shop-name${done?' done':''}">${it.item}</div><div class="shop-days">${it.days}</div></div>
+          <div class="shop-qty">${it.qty}</div>
+        </div>`;
+      }).join('')}</div>
+    </div>`).join('');
+}
+function renderExtras(){
+  document.getElementById('extras-list').innerHTML=extras.map(s=>`
+    <div class="extras-section">
+      <div class="extras-cat-title" style="color:${s.color}">${s.cat}</div>
+      <div>${s.items.map(it=>`<div class="extra-card" style="border-left:3px solid ${s.color}">
+        <div class="extra-name">${it.name}</div>
+        <div class="extra-tip">${it.tip}</div>
+        ${it.iron>0?`<div style="display:flex;gap:12px;align-items:center;margin-top:6px">${ironBar(it.iron)}${it.vitC>0?`<div style="font-size:10px;color:#ea580c;white-space:nowrap">🍊 ${it.vitC}mg</div>`:''}</div>`:''}
+      </div>`).join('')}</div>
+    </div>`).join('');
+}
+
+// ─── INTERACTIONS ─────────────────────────────────────────────────────────────
+function selDay(i){activeDay=i;renderDays();renderMatch();renderMeals();}
+function toggle(k){checked[k]=!checked[k];renderShopping();}
+function switchTab(i){
+  activeTab=i;
+  document.querySelectorAll('.tab-section').forEach((el,idx)=>el.classList.toggle('active',idx===i));
+  document.querySelectorAll('.nav-btn').forEach((b,idx)=>b.classList.toggle('active',idx===i));
+  document.getElementById('content').scrollTop=0;
+}
+
+renderDays();renderMatch();renderMeals();renderShopping();renderExtras();
+</script>
+</body>
+</html>
